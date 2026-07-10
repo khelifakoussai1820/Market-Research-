@@ -1,0 +1,1 @@
+"""Scrape competitors task."""

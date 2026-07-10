@@ -1,1 +1,3 @@
-# Market-Research-
+# Market Research
+
+Structure initiale du projet.
