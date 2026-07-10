@@ -4,3 +4,4 @@ from .responses import router as responses_router
 from .competitors import router as competitors_router
 from .decisions import router as decisions_router
 from .chat import router as chat_router
+from .uploads import router as uploads_router

@@ -1,0 +1,1 @@
+"""Format structured recommendations (✅ / 🚫 / ⚠️)."""

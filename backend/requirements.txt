@@ -1,5 +1,15 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
+psycopg2-binary
 pydantic
+pydantic-settings
 python-dotenv
+celery
+redis
+chromadb
+groq
+tavily-python
+pyyaml
+python-multipart
+pandas
