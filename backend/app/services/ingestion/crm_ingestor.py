@@ -1,1 +1,0 @@
-"""CRM connector / adapter layer."""
