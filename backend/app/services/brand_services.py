@@ -1,3 +1,4 @@
+import asyncio
 from sqlalchemy.orm import Session
 from app.models.brand import Brand
 from app.models.competitor import Competitor
@@ -11,8 +12,9 @@ async def analyze_brand_description(description: str) -> dict:
     AI-generated brand intelligence suggestions, grounded in a real web
     search so competitors are relevant to the described local market.
     """
+    loop = asyncio.get_event_loop()
     search_query = f"{description} concurrents et marques similaires prix abordables"
-    search_context = web_search(search_query)
+    search_context = await loop.run_in_executor(None, web_search, search_query)
     result = await generate_brand_understanding(description, search_context)
     return result
 

@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from app.services.llm_services import web_search
 
 
@@ -7,9 +8,10 @@ async def run_market_research(brand_name: str, industry: str, competitors: list[
     Run 5 parallel Tavily web searches and return all results as a single
     aggregated string to be fed into the LLM report generator.
     """
+    current_year = datetime.now().year
     queries = [
         f"{brand_name} competitors analysis {industry}",
-        f"{industry} market trends 2024 2025",
+        f"{industry} market trends {current_year}",
         f"{industry} industry news latest developments",
         f"{brand_name} {industry} customer discussions reviews",
         f"{industry} growth opportunities emerging markets",

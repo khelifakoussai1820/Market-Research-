@@ -1,18 +1,50 @@
-from groq import AsyncGroq
-from tavily import TavilyClient
+import logging
 import json
 from app.core.config import settings
 
-# Initialize Groq client
-groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+logger = logging.getLogger(__name__)
 
-# Initialize Tavily client
-tavily = TavilyClient(api_key=settings.TAVILY_API_KEY)
+# Max characters for search context injected into prompts
+MAX_SEARCH_CONTEXT_CHARS = 4000
+
+
+class LLMError(Exception):
+    """Raised when an LLM or external API call fails."""
+
+
+def _get_groq_client():
+    """Lazy-init the Groq client to avoid import-time side effects."""
+    from groq import AsyncGroq
+    api_key = settings.GROQ_API_KEY
+    if not api_key:
+        raise LLMError(
+            "GROQ_API_KEY non configurée. "
+            "Ajoutez-la dans le fichier .env (obtenez-la sur https://console.groq.com)."
+        )
+    return AsyncGroq(api_key=api_key, timeout=30.0, max_retries=1)
+
+
+def _get_tavily_client():
+    """Lazy-init the Tavily client."""
+    from tavily import TavilyClient
+    api_key = settings.TAVILY_API_KEY
+    if not api_key or "your-tavily-key" in api_key:
+        return None
+    return TavilyClient(api_key=api_key)
+
+
+def _trim_context(text: str, max_chars: int = MAX_SEARCH_CONTEXT_CHARS) -> str:
+    """Truncate search context to avoid exceeding LLM context limits."""
+    if len(text) <= max_chars:
+        return text
+    return text[:max_chars] + "\n\n[...contexte tronqué pour limiter la taille du prompt...]"
 
 
 def web_search(query: str) -> str:
     """Run a live Tavily web search, fall back to stub if key is not set."""
-    if not settings.TAVILY_API_KEY or "your-tavily-key" in settings.TAVILY_API_KEY:
+    tavily = _get_tavily_client()
+    if tavily is None:
+        logger.warning("TAVILY_API_KEY manquante — retour de données simulées")
         return "Recent articles show a 15% growth in premium car accessories."
     try:
         response = tavily.search(query=query, max_results=3)
@@ -23,17 +55,14 @@ def web_search(query: str) -> str:
             [f"- {r.get('title')}: {r.get('content', '')} ({r.get('url')})" for r in results]
         )
     except Exception as e:
-        print(f"Tavily search failed for '{query}': {e}")
+        logger.error("Tavily search failed for '%s': %s", query, e)
         return "Mock search result: Strong growth in premium car accessories market."
 
 
 async def generate_brand_understanding(description: str, search_context: str = "") -> dict:
-    """Use Groq LLM to analyze a brand description and return structured suggestions.
+    """Use Groq LLM to analyze a brand description and return structured suggestions."""
+    groq_client = _get_groq_client()
 
-    `search_context` (when provided) contains real web-search results so the
-    model can ground its competitor suggestions in the actual local market
-    instead of defaulting to generic global brands.
-    """
     context_block = ""
     if search_context.strip():
         context_block = f"""
@@ -42,7 +71,7 @@ Real web-search results about this market (use ONLY these to ground your
 competitor suggestions — do not invent competitors that are not present here
 or not known to operate in this market):
 \"\"\"
-{search_context}
+{_trim_context(search_context)}
 \"\"\" """
 
     prompt = f"""You are an expert, locally-aware brand strategist. Analyze the company description below and return structured brand intelligence.
@@ -77,20 +106,17 @@ Return ONLY a valid JSON object with exactly these keys:
         data.setdefault("market", None)
         data.setdefault("suggested_competitors", [])
         return data
+    except LLMError:
+        raise
     except Exception as e:
-        print(f"Groq brand understanding failed: {e}")
-        return {
-            "mission": f"To deliver excellent value in: {description}",
-            "industry": "General Business",
-            "target_audience": "General public",
-            "brand_tone": "Professional",
-            "market": None,
-            "suggested_competitors": ["Competitor A", "Competitor B", "Competitor C"],
-        }
+        logger.error("Groq brand understanding failed: %s", e)
+        raise LLMError(f"Échec de l'analyse de la marque : {e}") from e
 
 
 async def answer_question(question: str, context: str) -> str:
     """Answer a user question about their brand using retrieved report context."""
+    groq_client = _get_groq_client()
+
     prompt = f"""You are a market research assistant. Answer the user's question using ONLY the context below.
 If the context does not contain the answer, say you don't have that information yet.
 
@@ -108,25 +134,24 @@ Answer concisely and helpfully."""
             temperature=0.5,
         )
         return response.choices[0].message.content
+    except LLMError:
+        raise
     except Exception as e:
-        print(f"Groq chat answer failed: {e}")
-        return "Sorry, I couldn't generate an answer right now. Please try again."
+        logger.error("Groq chat answer failed: %s", e)
+        raise LLMError(f"Échec de la génération de réponse : {e}") from e
 
 
 async def generate_market_report(brand_data: dict, search_context: str) -> dict:
-    """Use Groq LLM to generate a comprehensive market analysis report.
+    """Use Groq LLM to generate a comprehensive market analysis report."""
+    groq_client = _get_groq_client()
 
-    The report is STRICTLY grounded in `search_context` (real web-search
-    results) so the model does not fabricate statistics, company facts, or
-    URLs.
-    """
     prompt = f"""You are a rigorous market research analyst. Write a market report using ONLY the web search context provided below.
 
 Brand Data:
 {json.dumps(brand_data, indent=2, ensure_ascii=False)}
 
 Web Search Context (real results from live search):
-{search_context if search_context.strip() else "(no search results were returned)"}
+{_trim_context(search_context) if search_context.strip() else "(no search results were returned)"}
 
 STRICT RULES — do not violate any of them:
 - Every factual claim, statistic, company name, and URL MUST come directly from the Web Search Context above. NEVER invent numbers, facts, quotes, or websites.
@@ -155,7 +180,6 @@ Return ONLY a valid JSON object with exactly these keys:
             temperature=0.3,
         )
         data = json.loads(response.choices[0].message.content)
-        # Defensive normalisation so the frontend never breaks on bad shapes
         data.setdefault("health_score", 5.0)
         data.setdefault("executive_summary", "")
         data.setdefault("market_trends", "")
@@ -164,14 +188,8 @@ Return ONLY a valid JSON object with exactly these keys:
         data.setdefault("recommendations", [])
         data.setdefault("competitor_map", [])
         return data
+    except LLMError:
+        raise
     except Exception as e:
-        print(f"Groq report generation failed: {e}")
-        return {
-            "health_score": 5.0,
-            "executive_summary": "Analyse impossible à générer pour le moment (erreur du modèle).",
-            "market_trends": "Données insuffisantes.",
-            "opportunities": [],
-            "threats": [],
-            "recommendations": [],
-            "competitor_map": [],
-        }
+        logger.error("Groq report generation failed: %s", e)
+        raise LLMError(f"Échec de la génération du rapport : {e}") from e

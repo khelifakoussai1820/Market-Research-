@@ -1,4 +1,5 @@
 import json
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -8,6 +9,9 @@ from app.models.user import User
 from app.models.brand import Brand
 from app.schemas.report import MarketReportOut, CompetitorEntry
 from app.services import report_services
+from app.services.llm_services import LLMError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/responses", tags=["responses"])
 
@@ -21,7 +25,7 @@ async def analyze_market(
     """
     Triggers the full market research pipeline:
     - 5 parallel web searches (Tavily)
-    - GPT-4o report generation
+    - LLM report generation
     - Save to DB
     - Index into ChromaDB (RAG)
     """
@@ -30,7 +34,14 @@ async def analyze_market(
         raise HTTPException(status_code=404, detail="Brand not found")
     if brand.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized")
-    report = await report_services.generate_full_report(db=db, brand_id=brand_id)
+    try:
+        report = await report_services.generate_full_report(db=db, brand_id=brand_id)
+    except LLMError as e:
+        logger.error("Report generation failed: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Impossible de générer le rapport : {e}",
+        )
     return _serialize_report(report)
 
 

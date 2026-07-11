@@ -26,6 +26,7 @@ class Settings(BaseSettings):
 
     # ChromaDB
     CHROMA_DB_PATH: str = "./chroma_db"
+    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 

@@ -69,10 +69,17 @@ export default function Chat() {
         const agentId = (idRef.current += 1)
         setMessages((m) => [...m, { id: agentId, role: 'agent', ...res }])
       }
-    } catch {
-      const res = mockAgent(value)
+    } catch (err) {
       const agentId = (idRef.current += 1)
-      setMessages((m) => [...m, { id: agentId, role: 'agent', ...res }])
+      const errorMsg = brandId
+        ? `Erreur : ${err.message || 'Le service est indisponible. Vérifiez que les clés API (GROQ) sont configurées dans .env.'}`
+        : null
+      if (errorMsg) {
+        setMessages((m) => [...m, { id: agentId, role: 'agent', text: errorMsg, sources: [] }])
+      } else {
+        const res = mockAgent(value)
+        setMessages((m) => [...m, { id: agentId, role: 'agent', ...res }])
+      }
     } finally {
       setTyping(false)
     }

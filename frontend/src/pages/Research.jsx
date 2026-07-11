@@ -57,6 +57,9 @@ export default function Research() {
         <div className="research-shell">
           <div className="research-card">
             <p className="form-error">{error}</p>
+            <p className="research-sub" style={{ marginTop: '0.5rem' }}>
+              Vérifiez que les clés API (GROQ_API_KEY, TAVILY_API_KEY) sont bien configurées dans le fichier .env du backend.
+            </p>
             <Link className="btn btn-primary" to="/idea">Recommencer</Link>
           </div>
         </div>

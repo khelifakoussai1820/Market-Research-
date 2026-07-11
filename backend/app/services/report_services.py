@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.response import MarketReport
 from app.models.brand import Brand
 from app.services.search_services import run_market_research
-from app.services.llm_services import generate_market_report
+from app.services.llm_services import generate_market_report, LLMError
 from app.services.rag_services import index_report
 
 
@@ -12,9 +12,11 @@ async def generate_full_report(db: Session, brand_id: int) -> MarketReport:
     Main orchestrator for the "Analyze Market" button.
     1. Load brand from DB
     2. Run 5 parallel web searches
-    3. Feed all results into GPT-4o to generate the report
+    3. Feed all results into the LLM to generate the report
     4. Save report to DB
     5. Index report text into ChromaDB for RAG
+
+    Raises LLMError if the LLM call fails so the API can return a proper error.
     """
     brand: Brand = db.query(Brand).filter(Brand.id == brand_id).first()
     if not brand:
@@ -29,7 +31,7 @@ async def generate_full_report(db: Session, brand_id: int) -> MarketReport:
         competitors=competitors,
     )
 
-    # Step 2: Generate the report via LLM
+    # Step 2: Generate the report via LLM (raises LLMError on failure)
     brand_data = {
         "name": brand.name,
         "mission": brand.mission,

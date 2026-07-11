@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends
+import logging
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user_dep
 from app.models.user import User
 from app.schemas.brand import BrandDescribeRequest, BrandSuggestionResponse, BrandConfirmRequest, BrandOut
 from app.services import brand_services
+from app.services.llm_services import LLMError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/brands", tags=["brands"])
 
@@ -18,7 +22,14 @@ async def describe_brand(
     Step 1: User describes their company in free text.
     AI returns suggested mission, industry, audience, tone, and competitor names.
     """
-    result = await brand_services.analyze_brand_description(payload.description)
+    try:
+        result = await brand_services.analyze_brand_description(payload.description)
+    except LLMError as e:
+        logger.error("Brand analysis failed: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Impossible d'analyser la marque : {e}",
+        )
     return BrandSuggestionResponse(**result)
 
 
