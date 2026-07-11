@@ -71,17 +71,30 @@ async function refreshAndRetry(path, options, auth) {
     refreshWaiters = []
     refreshing = false
   }
-  // Re-run the original request once with the new token
-  return request(path, options, auth)
+  const newToken = getToken()
+  if (!newToken) {
+    window.location.href = '/login'
+    throw new Error('Session expiree. Veuillez vous reconnecter.')
+  }
+  const updatedOptions = { ...options, headers: { ...options.headers, Authorization: `Bearer ${newToken}` } }
+  try {
+    return await request(path, updatedOptions, auth, TIMEOUT_DEFAULT, true)
+  } catch (err) {
+    if (err.message?.includes('401') || err.message?.includes('User not found') || err.message?.includes('Invalid or expired token')) {
+      clearToken()
+      window.location.href = '/login'
+    }
+    throw err
+  }
 }
 
-async function request(path, options, auth = false, timeout = TIMEOUT_DEFAULT) {
+async function request(path, options, auth = false, timeout = TIMEOUT_DEFAULT, _retried = false) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeout)
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, { ...options, signal: controller.signal })
     clearTimeout(timer)
-    if (res.status === 401 && auth) {
+    if (res.status === 401 && auth && !_retried) {
       return refreshAndRetry(path, options, auth)
     }
     if (!res.ok) {

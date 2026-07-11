@@ -10,12 +10,7 @@ const SUGGESTIONS = [
 ]
 
 const mockAgent = (q) => ({
-  text: `D’après la base documentaire, voici une synthèse pour « ${q} » : les retours clients penchent vers un positionnement clair et premium, avec un point de vigilance sur la clarté du message. Je recommande de consolider la preuve sociale avant toute campagne broad.`,
-  sources: [
-    { label: 'Rapport Q2 — page 4', score: 0.92 },
-    { label: 'Interviews cible 25-34', score: 0.87 },
-    { label: 'Analyse concurrents', score: 0.81 },
-  ],
+  text: `D'après la base documentaire, voici une synthèse pour « ${q} » : les retours clients penchent vers un positionnement clair et premium, avec un point de vigilance sur la clarté du message. Je recommande de consolider la preuve sociale avant toute campagne broad.`,
 })
 
 export default function Chat() {
@@ -28,9 +23,8 @@ export default function Chat() {
       id: 1,
       role: 'agent',
       text: brandId
-        ? 'Bonjour, j’ai analysé votre rapport de marché. Posez-moi une question précise et je m’appuie dessus pour répondre.'
-        : 'Bonjour, je suis votre assistant marché. Décrivez d’abord votre projet pour obtenir une analyse personnalisée, ou posez une question générale.',
-      sources: [],
+        ? 'Bonjour, j\'ai analysé votre rapport de marché. Posez-moi une question précise et je m\'appuie dessus pour répondre.'
+        : 'Bonjour, je suis votre assistant marché. Décrivez d\'abord votre projet pour obtenir une analyse personnalisée, ou posez une question générale.',
     },
   ])
   const [input, setInput] = useState('')
@@ -54,14 +48,9 @@ export default function Chat() {
       if (brandId) {
         const res = await askBrand(brandId, value)
         const agentId = (idRef.current += 1)
-        const sources = Array.isArray(res.sources)
-          ? res.sources.map((s) =>
-              typeof s === 'string' ? { label: s, score: null } : s,
-            )
-          : []
         setMessages((m) => [
           ...m,
-          { id: agentId, role: 'agent', text: res.answer, sources },
+          { id: agentId, role: 'agent', text: res.answer },
         ])
       } else {
         await new Promise((r) => setTimeout(r, 700))
@@ -75,10 +64,10 @@ export default function Chat() {
         ? `Erreur : ${err.message || 'Le service est indisponible. Vérifiez que les clés API (GROQ) sont configurées dans .env.'}`
         : null
       if (errorMsg) {
-        setMessages((m) => [...m, { id: agentId, role: 'agent', text: errorMsg, sources: [] }])
+        setMessages((m) => [...m, { id: agentId, role: 'agent', text: errorMsg }])
       } else {
         const res = mockAgent(value)
-        setMessages((m) => [...m, { id: agentId, role: 'agent', ...res }])
+        setMessages((m) => [...m, { id: agentId, role: 'agent', text: res.text }])
       }
     } finally {
       setTyping(false)
@@ -124,23 +113,6 @@ export default function Chat() {
             )}
             <div className="msg-content">
               <p>{m.text}</p>
-              {m.sources?.length > 0 && (
-                <div className="msg-sources">
-                  <span className="sources-label">Sources</span>
-                  {m.sources.map((s, i) => (
-                    <span className="source-chip" key={i} title={s.score != null ? `pertinence ${Math.round(s.score * 100)}%` : 'source'}>
-                      <svg className="source-icon" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M4 1.5h5.5L13 5v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-12a1 1 0 0 1 1-1Zm5 1.2V5h2.8L9 2.7ZM5.5 8h5v1h-5v-1Zm0 2.5h5v1h-5v-1Zm0-5h2v1h-2v-1Z"
-                        />
-                      </svg>
-                      {s.label}
-                      {s.score != null && <em>{Math.round(s.score * 100)}%</em>}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         ))}

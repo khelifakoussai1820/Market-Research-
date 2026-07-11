@@ -4,12 +4,6 @@ import { describeBrand, getToken } from '../api/client.js'
 import AppShell from '../components/AppShell.jsx'
 import './Idea.css'
 
-const EXAMPLES = [
-  'Une appli qui livre des repas faits maison préparés par des chefs locaux.',
-  'Un abonnement mensuel de produits écologiques pour les familles.',
-  'Une plateforme qui aide les freelances à gérer leur admin et leur facturation.',
-]
-
 export default function Idea() {
   const [idea, setIdea] = useState('')
   const [error, setError] = useState('')
@@ -58,20 +52,6 @@ export default function Idea() {
               onChange={(e) => setIdea(e.target.value)}
               rows={7}
             />
-
-            <div className="idea-examples">
-              <span>Vous manquez d'inspiration ?</span>
-              {EXAMPLES.map((ex) => (
-                <button
-                  type="button"
-                  key={ex}
-                  className="example-chip"
-                  onClick={() => setIdea(ex)}
-                >
-                  {ex}
-                </button>
-              ))}
-            </div>
 
             {error && <p className="form-error">{error}</p>}
 
