@@ -1,0 +1,141 @@
+.flow {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Header ---------- */
+.flow-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 28px;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.flow-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-h);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* ---------- Stepper ---------- */
+.flow-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.flow-step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 6px;
+}
+
+.flow-step-dot {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--social-bg);
+  border: 1px solid var(--border);
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.flow-step-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  transition: color 0.2s;
+}
+
+.flow-step.active .flow-step-dot {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-bg);
+}
+.flow-step.active .flow-step-label {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.flow-step.done .flow-step-dot {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.flow-step-bar {
+  width: 38px;
+  height: 2px;
+  margin: 0 6px;
+  background: var(--border);
+  border-radius: 2px;
+}
+.flow-step.done .flow-step-bar {
+  background: var(--accent);
+}
+
+/* ---------- Logout ---------- */
+.flow-logout {
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.flow-logout:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.flow-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 720px) {
+  .flow-header {
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    padding: 12px 16px;
+  }
+  .flow-steps {
+    order: 3;
+    width: 100%;
+  }
+  .flow-step-label {
+    display: none;
+  }
+  .flow-step-bar {
+    width: 22px;
+  }
+}
