@@ -1,6 +1,6 @@
 <div align="center">
 
-# Market Research — Brand Decision Studio
+#  Pivot — Brand Decision Studio
 
 **Plateforme d'aide à la décision de marque propulsée par l'IA**
 
