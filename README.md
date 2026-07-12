@@ -435,62 +435,6 @@ curl -X POST http://localhost:8000/api/v1/chat/1 \
 | `MarketReportOut` | `id`, `brand_id`, `health_score`, `executive_summary`, `market_trends`, `opportunities[]`, `threats[]`, `recommendations[]`, `competitor_map[]`, `created_at` | `POST /responses/analyze`, `GET /responses/report` |
 | `ChatResponse` | `answer`, `sources[]` | `POST /chat/{brand_id}` |
 
----
-
-## Plans tarifaires
-
-> Les plans ci-dessous definissent la structure tarifaire visee pour la plateforme.
-> Actuellement, l'application est entierement gratuite et ne contient pas d'integration de paiement.
-
-### Gratuit
-
-| Element | Limite |
-|---------|--------|
-| Marques analysees | 3 |
-| Rapports de marche | 3 |
-| Questions chat | 10 par marque |
-| Recherches web | 5 par analyse |
-| Export JSON | Inclus |
-| Support | Communaute |
-
-### Pro — 19,90 EUR/mois
-
-| Element | Limite |
-|---------|--------|
-| Marques analysees | Illimite |
-| Rapports de marche | Illimite |
-| Questions chat | Illimite |
-| Recherches web | 5 par analyse |
-| Export JSON + PDF | Inclus |
-| Historique complet | 12 mois |
-| Priorite LLM | Reponses plus rapides |
-| Support | Email |
-
-### Entreprise — 79,90 EUR/mois
-
-| Element | Limite |
-|---------|--------|
-| Tout le plan Pro | |
-| Equipes | Jusqu'a 10 utilisateurs |
-| Rapports personnalises | Templates brandes |
-| API access | Integregation tierce |
-| Donnees d'equipe | Tableau de bord partage |
-| SLA | Reponse sous 24h |
-| Account manager | Contact dedie |
-
-### Fonctionnalites prevues par plan
-
-| Fonctionnalite | Gratuit | Pro | Entreprise |
-|----------------|---------|-----|------------|
-| Analyse de marque IA | 3/mois | Illimite | Illimite |
-| Rapport de marche | 3/mois | Illimite | Illimite |
-| Chat RAG | 10 questions/marque | Illimite | Illimite |
-| Recherche web | 5 requetes/analyse | 10 requetes/analyse | 20 requetes/analyse |
-| Export JSON | Oui | Oui | Oui |
-| Export PDF | — | Oui | Oui + personnalise |
-| Tableau de bord equipes | — | — | Oui |
-| API access | — | — | Oui |
-| Support prioritaire | — | — | Oui |
 
 ---
 
@@ -654,12 +598,12 @@ python test_flow.py
 
 ## Licence
 
-Propritaire. Tous droits reserves.
 
----
 
 <div align="center">
 
-**Market Research** — Transformez les opinions de vos clients en decisions de marque assumees.
+**Avec Pivot** — Transformez les opinions de vos clients en decisions de marque assumees.
+<p> HACKIWHA : Hackathon Organized by MicroClub</p>
 
 </div>
+ 
